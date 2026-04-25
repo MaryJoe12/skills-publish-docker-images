@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   packages: write
+  
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -19,7 +20,16 @@ jobs:
           registry: ghcr.io
           username: {% raw %}${{ github.actor }}{% endraw %}
           password: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build and push Docker image
-        run: |
-          docker build . --tag ghcr.io/{{ full_repo_name | lower }}/stackoverflown:main
-          docker push ghcr.io/{{ full_repo_name | lower }}/stackoverflown:main
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/{{ full_repo_name | lower }}/stackoverflown:main
+            ghcr.io/{{ full_repo_name | lower }}/stackoverflown:{% raw %}${{ github.sha }}{% endraw %}
